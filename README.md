@@ -14,6 +14,7 @@
 
 ### Notes
 > **<p style="color:yellow;background-color:dark-grey">This is just a fork of the original MusicBot from Jagrosh for fixing some errors that has not been addressed yet - for v4.3.0</p>**
+> **<p style="color:yellow;background-color:dark-grey">This is just a fork of that for to enable it in docker.</p>**
 ---
 ### Patches
 #### Updated Lavaplayer to v2.2.4
@@ -68,3 +69,44 @@ mvn clean install
 <br> $\longrightarrow$ Use this to run the bot
 ---
 - More info on Maven Compilation : [[StackOverflow](https://stackoverflow.com/questions/38315279/how-to-compile-maven-project-from-command-line-with-all-dependencies)]
+---
+### Docker Compose
+- Change the ./config/config.CHANGE.txt to config.txt and add token for discord and OwnerId
+**docker-compose.yml**
+```yaml
+services:
+  jmusicbot:
+    # Option A: pull from GHCR (recommended for users of this repo)
+    image: ghcr.io/rolfstevns/jmusicbot:4.3.0.5
+    # Option B: build locally from Dockerfile in this repo
+    # build: .
+    container_name: jmusicbot
+    restart: unless-stopped
+    environment:
+      # JVM & bot flags
+      JAVA_OPTS: -Xms256m -Xmx512m
+      BOT_OPTS: -Dnogui=true
+      # Optional entrypoint behavior (default copies every start)
+      # MOVE_ONCE: "true"
+      # CONFIG_PATH_SRC: /data/config.txt
+      # CONFIG_PATH_DEST: /app/config.txt
+      # JAR_PATH: /app/JMusicBot.jar
+    volumes:
+      # Host ./config -> container /data (source for config.txt)
+      - ./config:/data
+    # No ports required; the bot connects outbound to Discord
+```
+## Troubleshooting
+
+### Bot doesn’t connect to Discord
+- Check `./config/config.txt` exists and has a valid `token` and `owner`
+- Ensure **Discord intents** are enabled in the Developer Portal:
+    - **Message Content Intent**
+    - **Server Members Intent**
+- Regenerate the bot token if unsure and update `config.txt`
+- Confirm the container can reach the internet (no outbound firewall blocks)
+- Run docker compose with sudo
+- Tail logs with:
+  ```bash
+  docker compose logs -f jmusicbot
+  ```

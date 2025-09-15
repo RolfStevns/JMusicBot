@@ -1,0 +1,11 @@
+services:
+  jmusicbot:
+    image: ghcr.io/rolfstevns/jmusicbot:4.3.0.5
+    container_name: jmusicbot
+    restart: unless-stopped
+    environment:
+      JAVA_OPTS: -Xms256m -Xmx512m
+      BOT_OPTS: -Dnogui=true
+      CONFIG_PATH: /data/config.txt
+    volumes:
+      - ./config:/data
