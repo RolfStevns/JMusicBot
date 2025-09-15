@@ -76,25 +76,14 @@ mvn clean install
 ```yaml
 services:
   jmusicbot:
-    # Option A: pull from GHCR (recommended for users of this repo)
     image: ghcr.io/rolfstevns/jmusicbot:4.3.0.5
-    # Option B: build locally from Dockerfile in this repo
-    # build: .
     container_name: jmusicbot
     restart: unless-stopped
     environment:
-      # JVM & bot flags
       JAVA_OPTS: -Xms256m -Xmx512m
       BOT_OPTS: -Dnogui=true
-      # Optional entrypoint behavior (default copies every start)
-      # MOVE_ONCE: "true"
-      # CONFIG_PATH_SRC: /data/config.txt
-      # CONFIG_PATH_DEST: /app/config.txt
-      # JAR_PATH: /app/JMusicBot.jar
     volumes:
-      # Host ./config -> container /data (source for config.txt)
       - ./config:/data
-    # No ports required; the bot connects outbound to Discord
 ```
 ## Troubleshooting
 
