@@ -1,6 +1,6 @@
 services:
   jmusicbot:
-    image: ghcr.io/rolfstevns/jmusicbot:4.3.0.5
+    image: ghcr.io/rolfstevns/jmusicbot:4.3.0.6
     container_name: jmusicbot
     restart: unless-stopped
     environment:
