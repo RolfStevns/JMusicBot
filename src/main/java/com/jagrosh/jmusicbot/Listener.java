@@ -20,12 +20,12 @@ import java.util.concurrent.TimeUnit;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.User;
-import net.dv8tion.jda.api.entities.VoiceChannel;
-import net.dv8tion.jda.api.events.ReadyEvent;
-import net.dv8tion.jda.api.events.ShutdownEvent;
+import net.dv8tion.jda.api.entities.channel.concrete.VoiceChannel;
 import net.dv8tion.jda.api.events.guild.GuildJoinEvent;
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceUpdateEvent;
-import net.dv8tion.jda.api.events.message.guild.GuildMessageDeleteEvent;
+import net.dv8tion.jda.api.events.message.MessageDeleteEvent;
+import net.dv8tion.jda.api.events.session.ReadyEvent;
+import net.dv8tion.jda.api.events.session.ShutdownEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -75,28 +75,21 @@ public class Listener extends ListenerAdapter
                 {
                     User owner = bot.getJDA().retrieveUserById(bot.getConfig().getOwnerId()).complete();
                     String currentVersion = OtherUtil.getCurrentVersion();
-                    String latestVersionJagrosh = OtherUtil.getLatestVersion("jagrosh");
-                    String latestVersionSeVile = OtherUtil.getLatestVersion("SeVile");
-                    
-                    if (latestVersionJagrosh != null && latestVersionSeVile != null) 
+                    String latestVersion = OtherUtil.getLatestVersion();
+                    if(latestVersion!=null && !currentVersion.equalsIgnoreCase(latestVersion))
                     {
-                        boolean isJagroshNewerThan043 = OtherUtil.compareVersions(latestVersionJagrosh, "0.4.3") > 0;
-                        boolean isCurrentVersionSeVile = currentVersion.equalsIgnoreCase(latestVersionSeVile);
-                        
-                        if (isJagroshNewerThan043 && !isCurrentVersionSeVile) 
-                        {
-                            String msg = String.format(OtherUtil.NEW_VERSION_AVAILABLE, currentVersion, latestVersionJagrosh);
-                            owner.openPrivateChannel().queue(pc -> pc.sendMessage(msg).queue());
-                        }
+                        String msg = String.format(OtherUtil.NEW_VERSION_AVAILABLE, currentVersion, latestVersion);
+                        owner.openPrivateChannel().queue(pc -> pc.sendMessage(msg).queue());
                     }
                 }
-                catch(Exception ignored) {}
+                catch(Exception ignored) {} // ignored
             }, 0, 24, TimeUnit.HOURS);
         }
+        bot.resetGame();
     }
     
     @Override
-    public void onGuildMessageDelete(GuildMessageDeleteEvent event) 
+    public void onMessageDelete(MessageDeleteEvent event) 
     {
         bot.getNowplayingHandler().onMessageDelete(event.getGuild(), event.getMessageIdLong());
     }

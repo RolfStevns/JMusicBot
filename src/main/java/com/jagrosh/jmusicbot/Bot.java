@@ -27,15 +27,9 @@ import com.jagrosh.jmusicbot.playlist.PlaylistLoader;
 import com.jagrosh.jmusicbot.settings.SettingsManager;
 import java.util.Objects;
 import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.OnlineStatus;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.entities.Guild;
-/* */
-import java.io.*;
-import java.nio.file.*;
-import java.util.regex.*;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-/* */
 
 /**
  *
@@ -56,7 +50,6 @@ public class Bot
     private JDA jda;
     private GUI gui;
     
-    
     public Bot(EventWaiter waiter, BotConfig config, SettingsManager settings)
     {
         this.waiter = waiter;
@@ -64,11 +57,7 @@ public class Bot
         this.settings = settings;
         this.playlists = new PlaylistLoader(config);
         this.threadpool = Executors.newSingleThreadScheduledExecutor();
-        
-        //Update config.txt before init
-        updateConfig();
-        
-        this.players = new PlayerManager(this, config);
+        this.players = new PlayerManager(this);
         this.players.init();
         this.nowplaying = new NowplayingHandler(this);
         this.nowplaying.init();
@@ -133,6 +122,9 @@ public class Bot
         Activity game = config.getGame()==null || config.getGame().getName().equalsIgnoreCase("none") ? null : config.getGame();
         if(!Objects.equals(jda.getPresence().getActivity(), game))
             jda.getPresence().setActivity(game);
+        OnlineStatus status = config.getStatus();
+        if(status != OnlineStatus.UNKNOWN && jda.getPresence().getStatus() != status)
+            jda.getPresence().setStatus(status);
     }
 
     public void shutdown()
@@ -168,50 +160,5 @@ public class Bot
     public void setGUI(GUI gui)
     {
         this.gui = gui;
-    }
-    
-    private void updateConfig() {
-        SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
-        String currentTime = sdf.format(new Date());
-
-        try {
-            Process process = new ProcessBuilder("docker", "run", "quay.io/invidious/youtube-trusted-session-generator")
-                    .redirectErrorStream(true)
-                    .start();
-
-            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            StringBuilder output = new StringBuilder();
-            String line;
-            while ((line = reader.readLine()) != null) {
-                output.append(line).append("\n");
-            }
-            process.waitFor();
-
-            String dockerOutput = output.toString();
-            Pattern poTokenPattern = Pattern.compile("po_token:\\s*([^\\s]+)");
-            Pattern visitorDataPattern = Pattern.compile("visitor_data:\\s*([^\\s]+)");
-
-            Matcher poTokenMatcher = poTokenPattern.matcher(dockerOutput);
-            Matcher visitorDataMatcher = visitorDataPattern.matcher(dockerOutput);
-
-            if (poTokenMatcher.find() && visitorDataMatcher.find()) {
-                String poToken = poTokenMatcher.group(1);
-                String visitorData = visitorDataMatcher.group(1);
-
-                Path tokensFilePath = Paths.get("tokens.txt");
-                String tokenData = "ytpotoken=" + poToken + "\nytvisitordata=" + visitorData;
-
-                Files.writeString(tokensFilePath, tokenData);
-
-                System.out.println("[" + currentTime + "] [INFO] ytpotoken = " + poToken);
-                System.out.println("[" + currentTime + "] [INFO] ytvisitordata = " + visitorData);
-                System.out.println("[" + currentTime + "] [INFO] tokens.txt successfully updated!");
-            } else {
-                System.err.println("[" + currentTime + "] [ERROR]: Failed to find po_token or visitor_data in Docker result.");
-                System.err.println("[" + currentTime + "] [ERROR]: !!! ENTER MANUALLY TO TOKENS.TXT !!!");
-            }
-        } catch (Exception e) {
-            System.err.println("[" + currentTime + "] [ERROR]: Error while updating tokens.txt " + e.getMessage());
-        }
     }
 }
